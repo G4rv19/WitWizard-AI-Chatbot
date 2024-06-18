@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Box</title>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    }
+
+    .container {
+        position: relative;
+        max-width: 800px;
+        width: 100%; /* Adjusted width */
+        max-height: 800px;
+        height: 100%;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column; /* Changed to column layout */
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        font-size: 24px;
+        color: #333;
+    }
+
+    .message-container {
+        margin-bottom: 20px;
+        overflow-y: auto;
+        flex-grow: 1; /* Make this container take remaining space */
+        max-height: calc(100% - 140px); /* Adjusted max-height */
+    }
+
+    .message {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .user-message {
+        background-color: #e2f0ff;
+        text-align: right;
+    }
+
+    .bot-message {
+        background-color: #f0f0f0;
+        text-align: left;
+    }
+
+    .input-container {
+        display: flex;
+        margin-top: auto; /* Push input container to the bottom */
+    }
+
+    .input-container input {
+        flex-grow: 1;
+        padding: 8px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .input-container button {
+        padding: 8px 16px;
+        border: none;
+        background-color: #4CAF50;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Chat Bot</h1>
+    </div>
+    <div class="message-container" id="message-container">
+        <!-- Chat messages will be displayed here -->
+    </div>
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+    </div>
+    <script data-name="BMC-Widget" data-cfasync="false" src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js" data-id="G4rv" data-description="Support me on Buy me a coffee!" data-message="Thanks for the coffee !" data-color="#FF5F5F" data-position="Right" data-x_margin="50" data-y_margin="50"></script>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var messageContainer = document.getElementById('message-container');
+        var messageInput = document.getElementById('message-input');
+        var sendButton = document.getElementById('send-button');
+
+        sendButton.addEventListener('click', function() {
+            var message = messageInput.value.trim();
+            if (message !== '') {
+                // Create a new message element for the user's message
+                var userMessageElement = document.createElement('div');
+                userMessageElement.classList.add('message', 'user-message');
+                userMessageElement.textContent = message;
+
+                // Append the user's message element to the message container
+                messageContainer.appendChild(userMessageElement);
+
+                // Clear the input field
+                messageInput.value = '';
+
+                // Scroll to the bottom of the message container
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+
+                // Send the message to the backend
+                fetch('/backend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: message })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Error sending message to the backend');
+                    }
+                })
+                .then(data => {
+                    // Create a new message element for the bot's response
+                    var botMessageElement = document.createElement('div');
+                    botMessageElement.classList.add('message', 'bot-message');
+                    botMessageElement.textContent = data.message;
+
+                    // Append the bot's response element to the message container
+                    messageContainer.appendChild(botMessageElement);
+
+                    // Scroll to the bottom of the message container
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Display an error message to the user
+                    var errorMessageElement = document.createElement('div');
+                    errorMessageElement.classList.add('message', 'error-message');
+                    errorMessageElement.textContent = error.message;
+                    messageContainer.appendChild(errorMessageElement);
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>
